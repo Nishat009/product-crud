@@ -9,6 +9,7 @@ import {
   setSearchTerm,
   setCategoryFilter,
   deleteProduct,
+  Category,
 } from '@/redux/productSlice';
 import ProductList from '@/components/ProductList';
 import CategoryFilterSidebar from '@/components/CategoryFilterSidebar';
@@ -41,8 +42,6 @@ export default function HomePage() {
     dispatch(fetchCategories());
   }, [dispatch]);
 
-  const totalPages = Math.ceil(total / limit);
-
   const handleDelete = (id: number) => {
     dispatch(deleteProduct(id));
   };
@@ -67,19 +66,19 @@ export default function HomePage() {
         </div>
 
         {loading ? (
-  <p>Loading...</p>
-) : error ? (
-  <p className="text-red-600">{error}</p>
-) : (
-  <>
-    <ProductList products={products} onDelete={handleDelete} />
-    <Pagination
-      currentPage={page}
-      totalPages={Math.ceil(total / limit)}
-      onPageChange={(newPage) => dispatch(setPage(newPage))}
-    />
-  </>
-)}
+          <p>Loading...</p>
+        ) : error ? (
+          <p className="text-red-600">{error}</p>
+        ) : (
+          <>
+            <ProductList products={products} onDelete={handleDelete} />
+            <Pagination
+              currentPage={page}
+              totalPages={Math.ceil(total / limit)}
+              onPageChange={(newPage) => dispatch(setPage(newPage))}
+            />
+          </>
+        )}
       </div>
 
       {/* Sidebar */}
@@ -89,12 +88,11 @@ export default function HomePage() {
         ) : categoriesError ? (
           <p className="text-red-600">{categoriesError}</p>
         ) : (
-         <CategoryFilterSidebar
-  categories={categories}              // string[]
-  selectedCategory={categoryFilter}    // string
-  onSelectCategory={(cat: string) => dispatch(setCategoryFilter(cat))}  // (string) => void
-/>
-
+          <CategoryFilterSidebar
+            categories={categories}
+            selectedCategory={categoryFilter}
+            onSelectCategory={(slug: string) => dispatch(setCategoryFilter(slug))}
+          />
         )}
       </aside>
     </div>

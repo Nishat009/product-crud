@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Product, addProduct, editProduct } from '@/redux/productSlice';
+import { Product, Category, addProduct, editProduct } from '@/redux/productSlice';
 import { useAppDispatch, useAppSelector } from '@/redux/store';
 import { useRouter } from 'next/navigation';
 
@@ -37,7 +37,7 @@ export default function ProductForm({ product, isEdit }: ProductFormProps) {
         title: product.title,
         price: product.price.toString(),
         description: product.description,
-        category: product.category?.name || '',
+        category: product.category?.slug || '',
         imageUrl: product.images?.[0] || '',
       });
     }
@@ -63,14 +63,18 @@ export default function ProductForm({ product, isEdit }: ProductFormProps) {
       return;
     }
 
-   const categoryObj = { id: 1, name: form.category };
-const productData: Partial<Product> = {
-  title: form.title,
-  price: Number(form.price),
-  description: form.description,
-  category: categoryObj,
-  images: form.imageUrl ? [form.imageUrl] : [],
-};
+    const selectedCategory = categories.find((cat: Category) => cat.slug === form.category);
+    const productData: Partial<Product> = {
+      title: form.title,
+      price: Number(form.price),
+      description: form.description,
+      category: selectedCategory || {
+        slug: form.category,
+        name: form.category,
+        url: `https://dummyjson.com/products/category/${form.category}`,
+      },
+      images: form.imageUrl ? [form.imageUrl] : [],
+    };
 
     if (isEdit && product) {
       await dispatch(editProduct({ ...productData, id: product.id } as Product));
@@ -104,9 +108,9 @@ const productData: Partial<Product> = {
           disabled={categoriesLoading}
         >
           <option value="" disabled>Select a category</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
+          {categories.map((cat: Category) => (
+            <option key={cat.slug} value={cat.slug}>
+              {cat.name}
             </option>
           ))}
         </select>

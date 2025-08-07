@@ -7,8 +7,6 @@ export interface Category {
   url: string;
 }
 
-
-
 export interface Product {
   id: number;
   title: string;
@@ -27,8 +25,7 @@ interface ProductState {
   limit: number;
   searchTerm: string;
   categoryFilter: string;
-     categories: string[]            // <-- changed from string[]
-          // <-- changed from string[]
+  categories: Category[];
   categoriesLoading: boolean;
   categoriesError: string | null;
 }
@@ -42,12 +39,11 @@ const initialState: ProductState = {
   limit: 6,
   searchTerm: '',
   categoryFilter: '',
-  categories: [],                   // <-- now array of objects
+  categories: [],
   categoriesLoading: false,
   categoriesError: null,
 };
 
-// Fetch products with pagination, search, category filter
 export const fetchProducts = createAsyncThunk<
   { products: Product[]; total: number },
   void,
@@ -60,7 +56,6 @@ export const fetchProducts = createAsyncThunk<
 
   let url = '';
   if (categoryFilter) {
-    // categoryFilter is a category name string
     url = `https://dummyjson.com/products/category/${encodeURIComponent(categoryFilter)}?limit=${limit}&skip=${skip}`;
   } else if (searchTerm) {
     url = `https://dummyjson.com/products/search?q=${encodeURIComponent(searchTerm)}&limit=${limit}&skip=${skip}`;
@@ -72,16 +67,13 @@ export const fetchProducts = createAsyncThunk<
   return { products: res.data.products, total: res.data.total };
 });
 
-// Fetch all categories as string[], convert to {id, name}[]
-export const fetchCategories = createAsyncThunk<string[]>(
+export const fetchCategories = createAsyncThunk<Category[]>(
   'products/fetchCategories',
   async () => {
     const res = await axios.get('https://dummyjson.com/products/categories');
-    console.log('Fetched categories:', res.data); // Debug
-    return res.data;
+    return res.data as Category[];
   }
 );
-
 
 export const deleteProduct = createAsyncThunk('products/deleteProduct', async (id: number) => {
   await axios.delete(`https://dummyjson.com/products/${id}`);
@@ -134,20 +126,18 @@ const productSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch products';
       })
-
       .addCase(fetchCategories.pending, (state) => {
         state.categoriesLoading = true;
         state.categoriesError = null;
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.categoriesLoading = false;
-        state.categories = action.payload; // already mapped objects
+        state.categories = action.payload;
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.categoriesLoading = false;
         state.categoriesError = action.error.message || 'Failed to fetch categories';
       })
-
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.products = state.products.filter((p) => p.id !== action.payload);
         state.total -= 1;

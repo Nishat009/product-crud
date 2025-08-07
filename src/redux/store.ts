@@ -15,7 +15,7 @@ import storage from 'redux-persist/lib/storage';
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['products'], // Only persist the 'products' slice
+  whitelist: ['products'],
 };
 
 const persistedReducer = persistReducer(persistConfig, productReducer);
