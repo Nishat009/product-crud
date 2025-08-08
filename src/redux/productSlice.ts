@@ -18,6 +18,7 @@ export interface Product {
 
 interface ProductState {
   products: Product[];
+  localProducts: Product[]; // Store locally added products
   loading: boolean;
   error: string | null;
   total: number;
@@ -32,6 +33,7 @@ interface ProductState {
 
 const initialState: ProductState = {
   products: [],
+  localProducts: [], // Initialize localProducts
   loading: false,
   error: null,
   total: 0,
@@ -119,8 +121,13 @@ const productSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-        state.products = action.payload.products;
-        state.total = action.payload.total;
+        // Merge API products with localProducts, avoiding duplicates
+        const apiProducts = action.payload.products;
+        const uniqueLocalProducts = state.localProducts.filter(
+          (localProduct) => !apiProducts.some((apiProduct) => apiProduct.id === localProduct.id)
+        );
+        state.products = [...uniqueLocalProducts, ...apiProducts];
+        state.total = action.payload.total + uniqueLocalProducts.length;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
@@ -140,16 +147,22 @@ const productSlice = createSlice({
       })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.products = state.products.filter((p) => p.id !== action.payload);
+        state.localProducts = state.localProducts.filter((p) => p.id !== action.payload);
         state.total -= 1;
       })
       .addCase(addProduct.fulfilled, (state, action) => {
-        state.products.unshift(action.payload);
+        state.localProducts.unshift(action.payload); // Add to localProducts
+        state.products.unshift(action.payload); // Add to displayed products
         state.total += 1;
       })
       .addCase(editProduct.fulfilled, (state, action) => {
         const idx = state.products.findIndex((p) => p.id === action.payload.id);
         if (idx >= 0) {
           state.products[idx] = action.payload;
+        }
+        const localIdx = state.localProducts.findIndex((p) => p.id === action.payload.id);
+        if (localIdx >= 0) {
+          state.localProducts[localIdx] = action.payload;
         }
       })
       .addCase(fetchProductById.fulfilled, (state, action) => {
