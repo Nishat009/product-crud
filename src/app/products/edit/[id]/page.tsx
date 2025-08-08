@@ -1,40 +1,42 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/redux/store';
 import { fetchProductById } from '@/redux/productSlice';
 import ProductForm from '@/components/ProductForm';
+import { useParams } from 'next/navigation';
 
 export default function EditProductPage() {
-  const { id } = useParams();
   const dispatch = useAppDispatch();
-  const router = useRouter();
-  const productId = id ? Number(id) : 0;
+  const { id } = useParams(); // Get product ID from URL
+  const { products, loading, error } = useAppSelector((state) => state.products);
 
-  const product = useAppSelector((state) =>
-    state.products.products.find((p) => p.id === productId)
-  );
-  const loading = useAppSelector((state) => state.products.loading);
+  // Find the product in the Redux state (from products or localProducts)
+  const product = products.find((p) => p.id === Number(id));
 
-  const [loadingLocal, setLoadingLocal] = useState(true);
-
+  // Fetch product if not found in state
   useEffect(() => {
-    async function load() {
-      if (!product) {
-        await dispatch(fetchProductById(productId));
-      }
-      setLoadingLocal(false);
+    if (!product && id) {
+      dispatch(fetchProductById(Number(id)));
     }
-    load();
-  }, [dispatch, productId, product]);
+  }, [dispatch, id, product]);
 
-  if (loading || loadingLocal || !product) return <p>Loading...</p>;
+  if (loading) {
+    return <div className="max-w-xl mx-auto p-6">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="max-w-xl mx-auto p-6 text-red-600">{error}</div>;
+  }
+
+  if (!product) {
+    return <div className="max-w-xl mx-auto p-6">Product not found</div>;
+  }
 
   return (
     <div className="max-w-xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-4">Edit Product</h1>
-      <ProductForm product={product} isEdit />
+      <ProductForm product={product} isEdit={true} />
     </div>
   );
 }

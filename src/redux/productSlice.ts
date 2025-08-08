@@ -18,7 +18,7 @@ export interface Product {
 
 interface ProductState {
   products: Product[];
-  localProducts: Product[]; // Store locally added products
+  localProducts: Product[];
   loading: boolean;
   error: string | null;
   total: number;
@@ -33,7 +33,7 @@ interface ProductState {
 
 const initialState: ProductState = {
   products: [],
-  localProducts: [], // Initialize localProducts
+  localProducts: [],
   loading: false,
   error: null,
   total: 0,
@@ -77,7 +77,20 @@ export const fetchCategories = createAsyncThunk<Category[]>(
   }
 );
 
-export const deleteProduct = createAsyncThunk('products/deleteProduct', async (id: number) => {
+export const deleteProduct = createAsyncThunk<
+  number,
+  number,
+  { state: { products: ProductState } }
+>('products/deleteProduct', async (id: number, thunkAPI) => {
+  const state = thunkAPI.getState();
+  const isLocalProduct = state.products.localProducts.some((p) => p.id === id);
+
+  if (isLocalProduct) {
+    // If the product is local, skip API call and return ID
+    return id;
+  }
+
+  // Otherwise, attempt API delete
   await axios.delete(`https://dummyjson.com/products/${id}`);
   return id;
 });
@@ -121,7 +134,6 @@ const productSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-        // Merge API products with localProducts, avoiding duplicates
         const apiProducts = action.payload.products;
         const uniqueLocalProducts = state.localProducts.filter(
           (localProduct) => !apiProducts.some((apiProduct) => apiProduct.id === localProduct.id)
@@ -151,8 +163,8 @@ const productSlice = createSlice({
         state.total -= 1;
       })
       .addCase(addProduct.fulfilled, (state, action) => {
-        state.localProducts.unshift(action.payload); // Add to localProducts
-        state.products.unshift(action.payload); // Add to displayed products
+        state.localProducts.unshift(action.payload);
+        state.products.unshift(action.payload);
         state.total += 1;
       })
       .addCase(editProduct.fulfilled, (state, action) => {

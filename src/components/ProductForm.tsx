@@ -53,8 +53,8 @@ export default function ProductForm({ product, isEdit = false }: ProductFormProp
     if (!form.price.trim()) return 'Price is required';
     if (isNaN(Number(form.price)) || Number(form.price) <= 0) return 'Price must be a positive number';
     if (form.description.length > 500) return 'Description must be 500 characters or less';
-    if (form.imageUrl && !/^https?:\/\/.*\.(?:png|jpg|jpeg|gif)$/i.test(form.imageUrl))
-      return 'Image URL must be a valid image link (png, jpg, jpeg, gif)';
+    // if (form.imageUrl && !/^https?:\/\/.*\.(?:png|jpg|jpeg|gif)$/i.test(form.imageUrl))
+    //   return 'Image URL must be a valid image link (png, jpg, jpeg, gif)';
     return null;
   };
 
@@ -99,7 +99,6 @@ export default function ProductForm({ product, isEdit = false }: ProductFormProp
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">{isEdit ? 'Edit Product' : 'Create New Product'}</h1>
       <form onSubmit={handleSubmit} className="space-y-4 border p-6 rounded shadow bg-white">
         <div>
           <label className="block mb-1 font-semibold">Title *</label>
