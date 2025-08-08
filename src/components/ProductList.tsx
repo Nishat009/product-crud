@@ -9,13 +9,14 @@ interface ProductListProps {
 }
 
 export default function ProductList({ products, onDelete }: ProductListProps) {
+   const safeProducts = Array.isArray(products) ? products : [];
   if (products.length === 0) {
     return <p>No products found.</p>;
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {products.map((product) => (
+      {safeProducts.map((product) => (
         <div key={product.id} className="border p-4 rounded shadow relative">
           {product.images?.[0] ? (
             <img
