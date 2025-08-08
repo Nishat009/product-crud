@@ -2,26 +2,30 @@
 
 import React, { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/redux/store';
-import { fetchProductById } from '@/redux/productSlice';
+import { fetchProductById, fetchCategories } from '@/redux/productSlice';
 import ProductForm from '@/components/ProductForm';
 import { useParams } from 'next/navigation';
 
 export default function EditProductPage() {
   const dispatch = useAppDispatch();
-  const { id } = useParams(); // Get product ID from URL
-  const { products, loading, error } = useAppSelector((state) => state.products);
+  const { id } = useParams();
+  const { products, loading, error, categories, categoriesLoading } = useAppSelector((state) => state.products);
 
-  // Find the product in the Redux state (from products or localProducts)
   const product = products.find((p) => p.id === Number(id));
 
-  // Fetch product if not found in state
   useEffect(() => {
-    if (!product && id) {
+    console.log('EditProductPage - ID:', id, 'Product:', product, 'Categories:', categories);
+    if (!categories.length && !categoriesLoading) {
+      console.log('Fetching categories...');
+      dispatch(fetchCategories());
+    }
+    if (!product && id && !loading) {
+      console.log('Fetching product by ID:', id);
       dispatch(fetchProductById(Number(id)));
     }
-  }, [dispatch, id, product]);
+  }, [dispatch, id, product, categories, categoriesLoading, loading]);
 
-  if (loading) {
+  if (loading || categoriesLoading) {
     return <div className="max-w-xl mx-auto p-6">Loading...</div>;
   }
 
@@ -31,6 +35,10 @@ export default function EditProductPage() {
 
   if (!product) {
     return <div className="max-w-xl mx-auto p-6">Product not found</div>;
+  }
+
+  if (!categories.length) {
+    return <div className="max-w-xl mx-auto p-6">Categories not loaded</div>;
   }
 
   return (
